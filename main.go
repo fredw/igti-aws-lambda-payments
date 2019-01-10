@@ -72,37 +72,48 @@ func Handler(ctx context.Context, event Event) (string, error) {
 	client := &http.Client{Timeout: timeout}
 
 	for _, m := range result.Messages {
-		go func() {
-			req, err := http.NewRequest(http.MethodPost, c.ProviderRequestURI, nil)
-			if err != nil {
-				l.WithField("message", m).Error("failed create a request")
-			}
+		// Create a request to the provider
+		req, err := http.NewRequest(http.MethodPost, c.ProviderRequestURI, nil)
+		if err != nil {
+			l.WithError(err).
+				WithField("message", m).
+				Error("failed create a request")
+		}
 
-			resp, err := client.Do(req)
-			if err != nil {
-				l.WithField("message", m).Error("failed do a request to the provider")
-			}
-			defer resp.Body.Close()
+		resp, err := client.Do(req)
+		if err != nil {
+			l.WithError(err).
+				WithField("message", m).
+				Error("failed do a request to the provider")
+		}
+		err = resp.Body.Close()
+		if err != nil {
+			l.WithError(err).
+				WithField("message", m).
+				Error("error on close body")
+		}
 
-			// Payment messagesProcessed successfully
-			if resp.StatusCode != http.StatusOK {
-				l.WithField("message", m).Info("fail to process the payment")
-				messagesFailed = messagesFailed + 1
-				return
-			}
+		// Payment failed
+		if resp.StatusCode != http.StatusOK {
+			l.WithField("message", m).Info("fail to process the payment")
+			messagesFailed = messagesFailed + 1
+			continue
+		}
 
-			d, err := svc.DeleteMessage(&sqs.DeleteMessageInput{
-				QueueUrl:      &c.SqsQueueURL,
-				ReceiptHandle: m.ReceiptHandle,
-			})
+		// Delete message from SQS
+		d, err := svc.DeleteMessage(&sqs.DeleteMessageInput{
+			QueueUrl:      &c.SqsQueueURL,
+			ReceiptHandle: m.ReceiptHandle,
+		})
 
-			if err != nil {
-				l.WithField("message", m).Error("failed to delete messages from SQS")
-			}
+		if err != nil {
+			l.WithError(err).
+				WithField("message", m).
+				Error("failed to delete messages from SQS")
+		}
 
-			messagesProcessed = messagesProcessed + 1
-			l.WithField("output", d).Info("message deleted successfully")
-		}()
+		messagesProcessed = messagesProcessed + 1
+		l.WithFields(log.Fields{"message": m, "output": d}).Info("message deleted successfully")
 	}
 
 	return fmt.Sprintf("successfully: %d failed: %d", messagesProcessed, messagesFailed), nil

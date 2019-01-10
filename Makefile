@@ -1,6 +1,7 @@
 # Variables
 OUTPUT=out/main
 LAMBDA_NAME=payments
+SQS_QUEUE_NAME=payments.fifo
 # Colors
 GREEN=\033[0;32m
 BLUE=\033[0;34m
@@ -40,3 +41,24 @@ test:
 # Clean
 clean:
 	@rm -rf out/*
+
+# SQS: receive messages with no visibility timeout
+sqs_receive_messages:
+	@aws sqs receive-message \
+		--queue-url ${shell aws sqs get-queue-url --queue-name ${SQS_QUEUE_NAME} | jq -r .QueueUrl} \
+		--visibility-timeout 0 \
+		--max-number-of-messages 10 \
+		| jq
+
+# SQS: create a test message
+sqs_create_test_message:
+	@aws sqs send-message \
+		--queue-url ${shell aws sqs get-queue-url --queue-name ${SQS_QUEUE_NAME} | jq -r .QueueUrl} \
+		--message-body "test" \
+		--message-group-id ${shell openssl rand -base64 6} \
+		--message-deduplication-id ${shell openssl rand -base64 6} \
+		| jq
+
+# SQS: purge the queue (delete all messages)
+sqs_purge_queue:
+	@aws sqs purge-queue --queue-url ${shell aws sqs get-queue-url --queue-name ${SQS_QUEUE_NAME} | jq -r .QueueUrl}
