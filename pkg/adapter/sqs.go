@@ -4,8 +4,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 	"github.com/pkg/errors"
+
+	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 )
 
 type SQSAdapter struct {
