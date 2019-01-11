@@ -25,8 +25,8 @@ func init() {
 }
 
 func main() {
-	r := adapter.NewAdapter(c)
-	h := handler.NewHandler(l, c, r)
+	a := adapter.NewAdapter(c)
+	h := handler.NewHandler(l, c, a)
 
 	lambda.Start(h.Handler)
 }
