@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 
-	"github.com/fredw/igti-aws-lambda-payments/config"
+	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
