@@ -54,7 +54,7 @@ sqs_receive_messages:
 sqs_create_test_message:
 	@aws sqs send-message \
 		--queue-url ${shell aws sqs get-queue-url --queue-name ${SQS_QUEUE_NAME} | jq -r .QueueUrl} \
-		--message-body "test" \
+		--message-body "{}" \
 		--message-group-id ${shell openssl rand -base64 6} \
 		--message-deduplication-id ${shell openssl rand -base64 6} \
 		| jq

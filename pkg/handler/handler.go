@@ -2,12 +2,9 @@ package handler
 
 import (
 	"context"
-	"net/http"
-	"time"
 
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/fredw/igti-aws-lambda-payments/pkg/adapter"
-	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
+	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
+	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -15,52 +12,45 @@ import (
 type Event struct{}
 
 type Handler struct {
-	log     *log.Logger
-	config  *config.Config
-	adapter adapter.MessageAdapter
+	log       *log.Logger
+	providers provider.Providers
+	adapter   message.Adapter
 }
 
-func NewHandler(l *log.Logger, c *config.Config, a adapter.MessageAdapter) *Handler {
+// NewHandler creates a new handler struct
+func NewHandler(l *log.Logger, p provider.Providers, a message.Adapter) *Handler {
 	h := &Handler{
-		log:     l,
-		config:  c,
-		adapter: a,
+		log:       l,
+		providers: p,
+		adapter:   a,
 	}
 	return h
 }
 
+// Response represents the lambda response
 type Response struct {
 	Message    string `json:"message"`
 	Successful int64  `json:"successful"`
 	Failed     int64  `json:"failed"`
 }
 
+// Handler handles the lambda invoke
 func (h *Handler) Handler(ctx context.Context, event Event) (Response, error) {
-	h.log.WithField("config", h.config).Info("loaded config")
-
-	result, err := h.adapter.GetMessages()
+	messages, err := h.adapter.GetMessages()
 
 	if err != nil {
 		return Response{}, errors.New("failed to read messages from SQS")
 	}
-
-	if len(result.Messages) == 0 {
+	if len(messages) == 0 {
 		return Response{Message: "No messages received"}, nil
 	}
 
 	var successful int64
 	var failed int64
 
-	// Calculate the request timeout
-	timeout := time.Duration(time.Duration(h.config.ProviderRequestTimeout) * time.Second)
-	// Create a http client
-	client := &http.Client{Timeout: timeout}
-
-	// Process all returned messages
-	for _, m := range result.Messages {
-		err := h.processMessage(client, m)
-
-		if err != nil {
+	// Process all messages
+	for _, m := range messages {
+		if err := h.processMessage(m); err != nil {
 			failed = failed + 1
 			h.log.WithError(err).WithField("message", m)
 			continue
@@ -77,31 +67,29 @@ func (h *Handler) Handler(ctx context.Context, event Event) (Response, error) {
 	}, nil
 }
 
-func (h *Handler) processMessage(client *http.Client, m *sqs.Message) error {
-	// Create a request to the provider
-	req, err := http.NewRequest(http.MethodPost, h.config.ProviderRequestURI, nil)
+// processMessage process a message calling the provider logic and handle the message through the SQS
+func (h *Handler) processMessage(m message.Message) error {
+	// Get the provider and process the message using the own provider logic
+	p := h.providers.GetByMessage(m)
+	if p == nil {
+		return errors.New("provider not available to process this message")
+	}
+
+	err := p.Process(m)
+
+	// Failed to process the message
 	if err != nil {
-		return errors.Wrap(err, "failed create a request")
+		// If it's a critical failure, move the message directly to the DLQ
+		switch err.(type) {
+		case *provider.CriticalError:
+			err = h.adapter.MoveToDLQ(m)
+		}
+		return errors.Wrap(err, "failed to process the payment")
 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return errors.Wrap(err, "failed do a request to the provider")
-
-	}
-	if err = resp.Body.Close(); err != nil {
-		return errors.Wrap(err, "error on close response body")
-	}
-
-	// Payment failed on provider
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("fail to process the payment")
-	}
-
-	err = h.adapter.Delete(m.ReceiptHandle)
-
-	if err != nil {
-		return errors.New("failed to delete messages from SQS")
+	// Successful: delete the message from SQS
+	if err := h.adapter.Delete(m.Id); err != nil {
+		return errors.Wrap(err, "failed to delete messages from SQS")
 	}
 
 	return nil
