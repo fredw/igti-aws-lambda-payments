@@ -26,7 +26,16 @@ func NewProviders(config *config.Config) Providers {
 	return providers
 }
 
-// GetByMessage return a provider checking the the provider string on the message
-func (ps Providers) GetByMessage(m message.Message) Processor {
-	return ps[m.Provider]
+// GetByMessage returns a provider checking the the provider string on the message
+func (providers Providers) GetByMessage(m message.Message) Processor {
+	return providers[m.Provider]
+}
+
+// GetNames returns the providers names
+func (providers Providers) GetNames() []string {
+	var names []string
+	for k := range providers {
+		names = append(names, k)
+	}
+	return names
 }

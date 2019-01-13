@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
@@ -52,12 +53,12 @@ func (h *Handler) Handler(ctx context.Context, event Event) (Response, error) {
 	for _, m := range messages {
 		if err := h.processMessage(m); err != nil {
 			failed = failed + 1
-			h.log.WithError(err).WithField("message", m)
+			h.log.WithError(err).WithField("message", m).Info("problem to process message")
 			continue
 		}
 
 		successful = successful + 1
-		h.log.WithFields(log.Fields{"message": m}).Info("message deleted successfully")
+		h.log.WithFields(log.Fields{"message": m}).Info("message processed successfully")
 	}
 
 	return Response{
@@ -72,13 +73,11 @@ func (h *Handler) processMessage(m message.Message) error {
 	// Get the provider and process the message using the own provider logic
 	p := h.providers.GetByMessage(m)
 	if p == nil {
-		return errors.New("provider not available to process this message")
+		return errors.New(fmt.Sprintf("provider %s not available to process this message", m.Provider))
 	}
 
-	err := p.Process(m)
-
-	// Failed to process the message
-	if err != nil {
+	// Try to process the message
+	if err := p.Process(m); err != nil {
 		// If it's a critical failure, move the message directly to the DLQ
 		switch err.(type) {
 		case *provider.CriticalError:

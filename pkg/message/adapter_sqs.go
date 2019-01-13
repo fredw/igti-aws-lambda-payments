@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 )
@@ -82,10 +83,12 @@ func (a *SQSAdapter) MoveToDLQ(m Message) error {
 	}
 
 	// Send the message to the DLQ
+	id := string(uuid.NewV4().String())
 	_, err = a.queue.SendMessage(&sqs.SendMessageInput{
-		MessageBody:  aws.String(string(body)),
-		QueueUrl:     aws.String(a.config.SqsDLQQueueURL),
-		DelaySeconds: aws.Int64(3),
+		MessageBody:            aws.String(string(body)),
+		QueueUrl:               aws.String(a.config.SqsDLQQueueURL),
+		MessageGroupId:         &id,
+		MessageDeduplicationId: &id,
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to create the on the DLQ")
