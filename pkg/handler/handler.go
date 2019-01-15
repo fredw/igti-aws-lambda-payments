@@ -68,25 +68,7 @@ func (h *Handler) Handler(ctx context.Context, event Event) (Response, error) {
 	var mResponses []MessageResponse
 	for _, m := range messages {
 		err := h.processMessage(m)
-
-		mStatus := MessageStatusSuccess
-		mError := ""
-		if err != nil {
-			mStatus = MessageStatusError
-			switch err.(type) {
-			case *provider.CriticalError:
-				mStatus = MessageStatusCritical
-			}
-			mError = err.Error()
-			h.log.WithError(err).WithField("message", m).Info("problem to process message")
-		}
-
-		mr := MessageResponse{
-			Id:     m.Id,
-			Status: mStatus,
-			Error:  mError,
-		}
-		mResponses = append(mResponses, mr)
+		mResponses = append(mResponses, h.getMessageResponse(m, err))
 
 		h.log.WithFields(log.Fields{"message": m}).Info("message processed successfully")
 	}
@@ -107,16 +89,7 @@ func (h *Handler) processMessage(m message.Message) error {
 
 	// Try to process the message
 	if err := p.Process(m); err != nil {
-		// If it's a critical failure, move the message directly to the DLQ
-		switch err.(type) {
-		case *provider.CriticalError:
-			errDLQ := h.adapter.MoveToDLQ(m)
-			if errDLQ != nil {
-				return errors.Wrap(err, "problem to move the message to DLQ")
-			}
-			return err
-		}
-		return errors.Wrap(err, "failed to process the payment")
+		return h.processErrorMessage(m, err)
 	}
 
 	// Successful: delete the message from SQS
@@ -125,4 +98,42 @@ func (h *Handler) processMessage(m message.Message) error {
 	}
 
 	return nil
+}
+
+// processErrorMessage process a message with an error
+func (h *Handler) processErrorMessage(m message.Message, err error) error {
+	switch err.(type) {
+	case *provider.CriticalError:
+		// If it's a critical failure, move the message directly to the DLQ
+		errDLQ := h.adapter.MoveToDLQ(m)
+		if errDLQ != nil {
+			return errors.Wrap(err, "problem to move the message to DLQ")
+		}
+		return err
+	}
+	return errors.Wrap(err, "failed to process the payment")
+}
+
+// getMessageResponse returns a message response
+func (h *Handler) getMessageResponse(m message.Message, err error) MessageResponse {
+	if err != nil {
+		mStatus := MessageStatusError
+		switch err.(type) {
+		case *provider.CriticalError:
+			mStatus = MessageStatusCritical
+		}
+
+		h.log.WithError(err).WithField("message", m).Info("problem to process message")
+
+		return MessageResponse{
+			Id:     m.Id,
+			Status: mStatus,
+			Error:  err.Error(),
+		}
+	}
+
+	return MessageResponse{
+		Id:     m.Id,
+		Status: MessageStatusSuccess,
+	}
 }
