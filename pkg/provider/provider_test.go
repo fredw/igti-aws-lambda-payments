@@ -42,10 +42,10 @@ func TestGetByMessage(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			provider := providers.GetByMessage(tt.message)
-			assert.Equal(t, tt.want, provider)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			provider := providers.GetByMessage(tc.message)
+			assert.Equal(t, tc.want, provider)
 		})
 	}
 }

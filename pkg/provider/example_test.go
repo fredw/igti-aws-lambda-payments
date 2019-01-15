@@ -101,19 +101,19 @@ func TestProcess(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Create a mocked http client
 			mock := new(client.MockHTTPClient)
 			req, _ := http.NewRequest(http.MethodPost, providerURI, nil)
-			mock.On("Do", req).Return(tt.response, tt.responseError)
+			mock.On("Do", req).Return(tc.response, tc.responseError)
 			c := client.NewHttpClient(mock)
 
 			// Overwrite the http client on provider
 			provider.Client = c
 
-			err := provider.Process(tt.message)
-			assert.Equal(t, tt.want, err)
+			err := provider.Process(tc.message)
+			assert.Equal(t, tc.want, err)
 		})
 	}
 }

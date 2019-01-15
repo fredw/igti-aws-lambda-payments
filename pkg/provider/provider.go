@@ -20,6 +20,12 @@ type HTTPClient interface {
 // Providers represents a list of providers
 type Providers map[string]Processor
 
+// ProcessorList represents a list of providers
+type ProcessorList interface {
+	GetByMessage(m message.Message) Processor
+	GetNames() []string
+}
+
 // Processor represents a provider that can process a message
 type Processor interface {
 	Process(m message.Message) error
