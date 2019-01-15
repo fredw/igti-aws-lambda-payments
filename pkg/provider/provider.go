@@ -1,14 +1,21 @@
 package provider
 
 import (
+	"net/http"
+
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
 )
 
 // Available providers
 const (
-	providerExample = "Example"
+	ExampleProvider = "Example"
 )
+
+// HTTPClient representation of the client call
+type HTTPClient interface {
+	Do(r *http.Request) (*http.Response, error)
+}
 
 // Providers represents a list of providers
 type Providers map[string]Processor
@@ -21,7 +28,7 @@ type Processor interface {
 // NewProviders create a list of all available providers
 func NewProviders(config *config.Config) Providers {
 	providers := Providers{
-		providerExample: NewExampleProvider(config),
+		ExampleProvider: NewExampleProvider(config),
 	}
 	return providers
 }
