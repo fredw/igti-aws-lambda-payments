@@ -1,4 +1,4 @@
-package provider
+package provider_test
 
 import (
 	"bytes"
@@ -9,22 +9,23 @@ import (
 	"github.com/fredw/igti-aws-lambda-payments/pkg/client"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
+	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
 	"github.com/stretchr/testify/assert"
 )
 
-var provider Example
+var providerExample provider.Example
 
-var providerURI = "http://provider.host/"
+var providerURI = "http://providerExample.host/"
 
 func init() {
 	c := &config.Config{
 		ProviderExampleRequestURI: providerURI,
 	}
-	provider = NewExampleProvider(c)
+	providerExample = provider.NewExampleProvider(c)
 }
 
 func TestNewExampleProvider(t *testing.T) {
-	assert.IsType(t, Example{}, provider)
+	assert.IsType(t, provider.Example{}, providerExample)
 }
 
 func TestProcess(t *testing.T) {
@@ -35,28 +36,8 @@ func TestProcess(t *testing.T) {
 		responseError error
 		want          error
 	}{
-		//{
-		//	name:    "failed by message without provider",
-		//	message: message.Message{},
-		//	response: &http.Response{
-		//		StatusCode: http.StatusOK,
-		//		Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
-		//	},
-		//	want: ErrFailProcessPayment,
-		//},
-		//{
-		//	name: "failed by message with an non existent provider",
-		//	message: message.Message{
-		//		Provider: "xyz",
-		//	},
-		//	response: &http.Response{
-		//		StatusCode: http.StatusOK,
-		//		Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
-		//	},
-		//	want: ErrFailProcessPayment,
-		//},
 		{
-			name: "success due a 200 OK from provider",
+			name: "success due a 200 OK from providerExample",
 			message: message.Message{
 				Provider: "Example",
 			},
@@ -74,11 +55,11 @@ func TestProcess(t *testing.T) {
 			response: &http.Response{
 				Body: ioutil.NopCloser(bytes.NewBufferString(`{"error":"test"}`)),
 			},
-			responseError: ErrFailedRequest,
-			want:          ErrFailedRequest,
+			responseError: provider.ErrFailedRequest,
+			want:          provider.ErrFailedRequest,
 		},
 		{
-			name: "failed due a 400 Bad Request from provider",
+			name: "failed due a 400 Bad Request from providerExample",
 			message: message.Message{
 				Provider: "Example",
 			},
@@ -86,10 +67,10 @@ func TestProcess(t *testing.T) {
 				StatusCode: http.StatusBadRequest,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(`{"foo":"bar"}`)),
 			},
-			want: ErrFailProcessPayment,
+			want: provider.ErrFailProcessPayment,
 		},
 		{
-			name: "failed due a 500 Internal Server Error from provider",
+			name: "failed due a 500 Internal Server Error from providerExample",
 			message: message.Message{
 				Provider: "Example",
 			},
@@ -97,7 +78,7 @@ func TestProcess(t *testing.T) {
 				StatusCode: http.StatusInternalServerError,
 				Body:       ioutil.NopCloser(bytes.NewBufferString(``)),
 			},
-			want: ErrCriticalProviderInternal,
+			want: provider.ErrCriticalProviderInternal,
 		},
 	}
 
@@ -109,10 +90,10 @@ func TestProcess(t *testing.T) {
 			mock.On("Do", req).Return(tc.response, tc.responseError)
 			c := client.NewHttpClient(mock)
 
-			// Overwrite the http client on provider
-			provider.Client = c
+			// Overwrite the http client on providerExample
+			providerExample.Client = c
 
-			err := provider.Process(tc.message)
+			err := providerExample.Process(tc.message)
 			assert.Equal(t, tc.want, err)
 		})
 	}

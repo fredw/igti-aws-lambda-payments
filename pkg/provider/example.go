@@ -12,17 +12,17 @@ import (
 
 var (
 	ErrFailProcessPayment       = errors.New("fail to process the payment")
-	ErrFailedRequest            = errors.New("failed to do a request to the provider")
-	ErrCriticalProviderInternal = NewCriticalError("payment can't be processed due a provider internal error")
+	ErrFailedRequest            = errors.New("failed to do a request to the providerExample")
+	ErrCriticalProviderInternal = NewCriticalError("payment can't be processed due a providerExample internal error")
 )
 
-// Example represents an example provider
+// Example represents an example providerExample
 type Example struct {
 	Config *config.Config
 	Client client.HttpCaller
 }
 
-// NewExampleProvider returns a new example provider
+// NewExampleProvider returns a new example providerExample
 func NewExampleProvider(config *config.Config) Example {
 	// Calculate the request timeout
 	timeout := time.Duration(time.Duration(60) * time.Second)
@@ -38,7 +38,7 @@ func NewExampleProvider(config *config.Config) Example {
 }
 
 func (p Example) Process(m message.Message) error {
-	// Create a request to the provider
+	// Create a request to the providerExample
 	req, err := http.NewRequest(http.MethodPost, p.Config.ProviderExampleRequestURI, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a request")
@@ -54,14 +54,14 @@ func (p Example) Process(m message.Message) error {
 		return errors.Wrap(err, "error on close response body")
 	}
 
-	// Critical failure on provider, the message shouldn't be processed again, moving directly to the DLQ
+	// Critical failure on providerExample, the message shouldn't be processed again, moving directly to the DLQ
 	// For example, you can check for a specific error on message body. In this case we are checking for 500 Internal Server Error
 	if resp.StatusCode == http.StatusInternalServerError {
 		return ErrCriticalProviderInternal
 	}
 
-	// Payment failed on provider
-	// For example, this provider consider a payment failure when the http status is different from 200 OK
+	// Payment failed on providerExample
+	// For example, this providerExample consider a payment failure when the http status is different from 200 OK
 	if resp.StatusCode != http.StatusOK {
 		return ErrFailProcessPayment
 	}

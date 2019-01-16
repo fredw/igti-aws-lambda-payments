@@ -27,14 +27,14 @@ func TestGetByMessage(t *testing.T) {
 		want    Processor
 	}{
 		{
-			name: "it should return the example provider",
+			name: "it should return the example providerExample",
 			message: message.Message{
 				Provider: "Example",
 			},
 			want: providers[ExampleProvider],
 		},
 		{
-			name: "it should't return a provider",
+			name: "it should't return a providerExample",
 			message: message.Message{
 				Provider: "UnkwownProvider",
 			},

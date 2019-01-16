@@ -1,4 +1,4 @@
-package client
+package client_test
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/fredw/igti-aws-lambda-payments/pkg/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,17 +41,17 @@ func TestDo(t *testing.T) {
 			response: &http.Response{
 				Body: nil,
 			},
-			wantErr: ErrMalformedBody,
+			wantErr: client.ErrMalformedBody,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mock := new(MockHTTPClient)
+			mock := new(client.MockHTTPClient)
 			req, _ := http.NewRequest(http.MethodGet, "/", tc.requestBody)
 			mock.On("Do", req).Return(tc.response, tc.responseErr)
 
-			c := NewHttpClient(mock)
+			c := client.NewHttpClient(mock)
 
 			res, err := c.Do(req)
 			if err == nil {

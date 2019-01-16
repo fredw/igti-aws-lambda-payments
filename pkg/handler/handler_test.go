@@ -1,10 +1,11 @@
-package handler
+package handler_test
 
 import (
 	"context"
 	"io/ioutil"
 	"testing"
 
+	"github.com/fredw/igti-aws-lambda-payments/pkg/handler"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
 	"github.com/pkg/errors"
@@ -30,7 +31,7 @@ func TestNewHandler(t *testing.T) {
 		adapterMoveDLQError       error
 		processError              error
 		providerEmpty             bool
-		wantResponse              Response
+		wantResponse              handler.Response
 		wantErr                   error
 	}{
 		{
@@ -45,16 +46,16 @@ func TestNewHandler(t *testing.T) {
 					Provider: "Example",
 				},
 			},
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "Messages processed",
-				Messages: []MessageResponse{
+				Messages: []handler.MessageResponse{
 					{
 						Id:     &messageId,
-						Status: MessageStatusSuccess,
+						Status: handler.MessageStatusSuccess,
 					},
 					{
 						Id:     &messageId,
-						Status: MessageStatusSuccess,
+						Status: handler.MessageStatusSuccess,
 					},
 				},
 			},
@@ -62,12 +63,12 @@ func TestNewHandler(t *testing.T) {
 		{
 			name:                   "failed to return messages",
 			adapterGetMessageError: errors.New("test"),
-			wantErr:                ErrFailedReadMessages,
+			wantErr:                handler.ErrFailedReadMessages,
 		},
 		{
 			name:                      "no messages",
 			adapterGetMessageResponse: message.Messages{},
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "No messages received",
 			},
 		},
@@ -75,12 +76,12 @@ func TestNewHandler(t *testing.T) {
 			name:                      "messages processed with error",
 			adapterGetMessageResponse: messages,
 			processError:              errors.New("test"),
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "Messages processed",
-				Messages: []MessageResponse{
+				Messages: []handler.MessageResponse{
 					{
 						Id:     &messageId,
-						Status: MessageStatusError,
+						Status: handler.MessageStatusError,
 						Error:  "failed to process the payment: test",
 					},
 				},
@@ -90,12 +91,12 @@ func TestNewHandler(t *testing.T) {
 			name:                      "messages processed with error by non existent provider",
 			adapterGetMessageResponse: messages,
 			providerEmpty:             true,
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "Messages processed",
-				Messages: []MessageResponse{
+				Messages: []handler.MessageResponse{
 					{
 						Id:     &messageId,
-						Status: MessageStatusError,
+						Status: handler.MessageStatusError,
 						Error:  "provider Example not available to process this message",
 					},
 				},
@@ -105,12 +106,12 @@ func TestNewHandler(t *testing.T) {
 			name:                      "messages processed with critical error",
 			adapterGetMessageResponse: messages,
 			processError:              provider.NewCriticalError("test"),
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "Messages processed",
-				Messages: []MessageResponse{
+				Messages: []handler.MessageResponse{
 					{
 						Id:     &messageId,
-						Status: MessageStatusCritical,
+						Status: handler.MessageStatusCritical,
 						Error:  "test",
 					},
 				},
@@ -120,12 +121,12 @@ func TestNewHandler(t *testing.T) {
 			name:                      "messages processed with delete error",
 			adapterGetMessageResponse: messages,
 			adapterDeleteError:        errors.New("test"),
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "Messages processed",
-				Messages: []MessageResponse{
+				Messages: []handler.MessageResponse{
 					{
 						Id:     &messageId,
-						Status: MessageStatusError,
+						Status: handler.MessageStatusError,
 						Error:  "failed to delete messages from SQS: test",
 					},
 				},
@@ -136,12 +137,12 @@ func TestNewHandler(t *testing.T) {
 			adapterGetMessageResponse: messages,
 			processError:              provider.NewCriticalError("test"),
 			adapterMoveDLQError:       errors.New("test"),
-			wantResponse: Response{
+			wantResponse: handler.Response{
 				Result: "Messages processed",
-				Messages: []MessageResponse{
+				Messages: []handler.MessageResponse{
 					{
 						Id:     &messageId,
-						Status: MessageStatusError,
+						Status: handler.MessageStatusError,
 						Error:  "problem to move the message to DLQ: test",
 					},
 				},
@@ -173,8 +174,8 @@ func TestNewHandler(t *testing.T) {
 			mockAdapter.On("Delete", mock.Anything).Return(tc.adapterDeleteError)
 			mockAdapter.On("MoveToDLQ", mock.Anything).Return(tc.adapterMoveDLQError)
 
-			handler := NewHandler(l, providersMock, mockAdapter)
-			resp, err := handler.Handler(ctx, Event{})
+			h := handler.NewHandler(l, providersMock, mockAdapter)
+			resp, err := h.Handler(ctx, handler.Event{})
 
 			assert.Equal(t, tc.wantResponse, resp)
 			assert.Equal(t, tc.wantErr, err)

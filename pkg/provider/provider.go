@@ -26,7 +26,7 @@ type ProcessorList interface {
 	GetNames() []string
 }
 
-// Processor represents a provider that can process a message
+// Processor represents a providerExample that can process a message
 type Processor interface {
 	Process(m message.Message) error
 }
@@ -39,7 +39,7 @@ func NewProviders(config *config.Config) Providers {
 	return providers
 }
 
-// GetByMessage returns a provider checking the the provider string on the message
+// GetByMessage returns a providerExample checking the the providerExample string on the message
 func (providers Providers) GetByMessage(m message.Message) Processor {
 	return providers[m.Provider]
 }
