@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/handler"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/logger"
@@ -24,10 +26,13 @@ func main() {
 	l.WithField("providers", providers.GetNames()).Info("providers list")
 
 	// Create a new SQS adapter
-	sqs := message.NewSQSAdapter(c)
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+	adapter := message.NewSQSAdapter(c, sqs.New(sess))
 
 	// Create a new handler to handle the Lambda invocation
-	h := handler.NewHandler(l, providers, sqs)
+	h := handler.NewHandler(l, providers, adapter)
 
 	lambda.Start(h.Handler)
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -12,7 +11,7 @@ import (
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 )
 
-type SQSMessageManager interface {
+type SQSManager interface {
 	ReceiveMessage(*sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error)
 	DeleteMessage(*sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error)
 	SendMessage(*sqs.SendMessageInput) (*sqs.SendMessageOutput, error)
@@ -20,24 +19,21 @@ type SQSMessageManager interface {
 
 type SQSAdapter struct {
 	Config *config.Config
-	Queue  SQSMessageManager
+	SQS    SQSManager
 }
 
 // NewSQSAdapter creates a new SQS adapter
-func NewSQSAdapter(c *config.Config) *SQSAdapter {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+func NewSQSAdapter(c *config.Config, sqs SQSManager) *SQSAdapter {
 	a := &SQSAdapter{
 		Config: c,
-		Queue:  sqs.New(sess),
+		SQS:    sqs,
 	}
 	return a
 }
 
 // GetMessages returns messages from SQS
 func (a *SQSAdapter) GetMessages() (Messages, error) {
-	result, err := a.Queue.ReceiveMessage(&sqs.ReceiveMessageInput{
+	result, err := a.SQS.ReceiveMessage(&sqs.ReceiveMessageInput{
 		AttributeNames: []*string{
 			aws.String(sqs.MessageSystemAttributeNameSentTimestamp),
 		},
@@ -68,7 +64,7 @@ func (a *SQSAdapter) GetMessages() (Messages, error) {
 
 // Delete message from SQS
 func (a *SQSAdapter) Delete(id *string) error {
-	_, err := a.Queue.DeleteMessage(&sqs.DeleteMessageInput{
+	_, err := a.SQS.DeleteMessage(&sqs.DeleteMessageInput{
 		QueueUrl:      &a.Config.SqsQueueURL,
 		ReceiptHandle: id,
 	})
@@ -89,7 +85,7 @@ func (a *SQSAdapter) MoveToDLQ(m Message) error {
 
 	// Send the message to the DLQ
 	id := string(uuid.NewV4().String())
-	_, err = a.Queue.SendMessage(&sqs.SendMessageInput{
+	_, err = a.SQS.SendMessage(&sqs.SendMessageInput{
 		MessageBody:            aws.String(string(body)),
 		QueueUrl:               aws.String(a.Config.SqsDLQQueueURL),
 		MessageGroupId:         &id,
@@ -99,9 +95,9 @@ func (a *SQSAdapter) MoveToDLQ(m Message) error {
 		return errors.Wrap(err, "failed to create the on the DLQ")
 	}
 
-	// Delete the message from the main Queue
+	// Delete the message from the main SQS
 	if err := a.Delete(m.Id); err != nil {
-		return errors.Wrap(err, "failed to delete the message from the main Queue")
+		return errors.Wrap(err, "failed to delete the message from the main SQS")
 	}
 
 	return nil

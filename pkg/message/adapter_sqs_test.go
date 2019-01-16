@@ -70,10 +70,7 @@ func TestSQSAdapter_GetMessages(t *testing.T) {
 			mockSQS.On("ReceiveMessage", mock.AnythingOfType("*sqs.ReceiveMessageInput")).
 				Return(tc.receiveMessageOutput, tc.receiveMessageError)
 
-			sa := message.SQSAdapter{
-				Config: &config.Config{},
-				Queue:  mockSQS,
-			}
+			sa := message.NewSQSAdapter(&config.Config{}, mockSQS)
 			messages, err := sa.GetMessages()
 
 			assert.Equal(t, tc.want, messages)
