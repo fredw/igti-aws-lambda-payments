@@ -42,7 +42,7 @@ type Response struct {
 type MessageResponse struct {
 	ID     *string `json:"id"`
 	Status string  `json:"status"`
-	Error  string  `json:"error"`
+	Error  string  `json:"error,omitempty"`
 }
 
 // NewHandler creates a new handler struct
