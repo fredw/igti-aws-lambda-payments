@@ -23,5 +23,3 @@ deploy:
   region: "us-west-2"
   role: "arn:aws:iam::149764127702:role/service-role/payments"
   runtime: "go1.x"
-  module_name: ""
-  handler_name: "main"
