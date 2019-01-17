@@ -15,10 +15,10 @@ import (
 )
 
 func TestNewHandler(t *testing.T) {
-	messageId := "message-id"
+	messageID := "message-id"
 	messages := message.Messages{
 		{
-			Id:       &messageId,
+			Id:       &messageID,
 			Provider: "Example",
 		},
 	}
@@ -38,11 +38,11 @@ func TestNewHandler(t *testing.T) {
 			name: "messages processed successful with 2 success",
 			adapterGetMessageResponse: message.Messages{
 				{
-					Id:       &messageId,
+					Id:       &messageID,
 					Provider: "Example",
 				},
 				{
-					Id:       &messageId,
+					Id:       &messageID,
 					Provider: "Example",
 				},
 			},
@@ -50,11 +50,11 @@ func TestNewHandler(t *testing.T) {
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusSuccess,
 					},
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusSuccess,
 					},
 				},
@@ -80,7 +80,7 @@ func TestNewHandler(t *testing.T) {
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusError,
 						Error:  "failed to process the payment: test",
 					},
@@ -95,7 +95,7 @@ func TestNewHandler(t *testing.T) {
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusError,
 						Error:  "provider Example not available to process this message",
 					},
@@ -110,7 +110,7 @@ func TestNewHandler(t *testing.T) {
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusCritical,
 						Error:  "test",
 					},
@@ -125,7 +125,7 @@ func TestNewHandler(t *testing.T) {
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusError,
 						Error:  "failed to delete messages from SQS: test",
 					},
@@ -141,7 +141,7 @@ func TestNewHandler(t *testing.T) {
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
-						Id:     &messageId,
+						ID:     &messageID,
 						Status: handler.MessageStatusError,
 						Error:  "problem to move the message to DLQ: test",
 					},

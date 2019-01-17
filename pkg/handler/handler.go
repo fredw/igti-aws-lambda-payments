@@ -40,7 +40,7 @@ type Response struct {
 
 // MessageResponse represents the message response
 type MessageResponse struct {
-	Id     *string `json:"id"`
+	ID     *string `json:"id"`
 	Status string  `json:"status"`
 	Error  string  `json:"error"`
 }
@@ -128,14 +128,14 @@ func (h *Handler) getMessageResponse(m message.Message, err error) MessageRespon
 		h.log.WithError(err).WithField("message", m).Info("problem to process message")
 
 		return MessageResponse{
-			Id:     m.Id,
+			ID:     m.Id,
 			Status: mStatus,
 			Error:  err.Error(),
 		}
 	}
 
 	return MessageResponse{
-		Id:     m.Id,
+		ID:     m.Id,
 		Status: MessageStatusSuccess,
 	}
 }
