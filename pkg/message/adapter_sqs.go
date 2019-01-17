@@ -11,12 +11,14 @@ import (
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 )
 
+// SQSManager specifies a SQS manager interface
 type SQSManager interface {
 	ReceiveMessage(*sqs.ReceiveMessageInput) (*sqs.ReceiveMessageOutput, error)
 	DeleteMessage(*sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error)
 	SendMessage(*sqs.SendMessageInput) (*sqs.SendMessageOutput, error)
 }
 
+// SQSAdapter represents the SQS adapter
 type SQSAdapter struct {
 	config *config.Config
 	sqs    SQSManager

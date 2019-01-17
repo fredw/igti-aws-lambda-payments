@@ -84,7 +84,7 @@ func (h *Handler) processMessage(m message.Message) error {
 	// Get the provider and process the message using the own provider logic
 	p := h.providers.GetByMessage(m)
 	if p == nil {
-		return errors.New(fmt.Sprintf("provider %s not available to process this message", m.Provider))
+		return fmt.Errorf("provider %s not available to process this message", m.Provider)
 	}
 
 	// Try to process the message

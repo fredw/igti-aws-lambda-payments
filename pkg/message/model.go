@@ -1,5 +1,6 @@
 package message
 
+// Customer represents the customer that purchased the order
 type Customer struct {
 	Id        string `json:"id"`
 	FirstName string `json:"first_name"`
@@ -9,6 +10,7 @@ type Customer struct {
 	Gender    string `json:"gender"`
 }
 
+// Address represents a contact address
 type Address struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -21,12 +23,14 @@ type Address struct {
 	Phone     string `json:"phone"`
 }
 
+// OrderItem represents the item of the order
 type OrderItem struct {
 	Id        string  `json:"id"`
 	Name      string  `json:"name"`
 	UnitPrice float64 `json:"unit_price"`
 }
 
+// Order represents the purchased order
 type Order struct {
 	Id              string      `json:"id"`
 	PaymentMethod   string      `json:"payment_method"`
@@ -37,10 +41,12 @@ type Order struct {
 	ShippingAddress Address     `json:"shipping_address"`
 }
 
+// Message represents the message
 type Message struct {
 	Id       *string `json:"id"`
 	Provider string  `json:"provider"`
 	Order    Order   `json:"order"`
 }
 
+// Messages represents a list of messages
 type Messages []Message

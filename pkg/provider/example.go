@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// List of errors
 var (
 	ErrFailProcessPayment       = errors.New("fail to process the payment")
 	ErrFailedRequest            = errors.New("failed to do a request to the providerExample")
@@ -37,6 +38,7 @@ func NewExampleProvider(config *config.Config) Example {
 	return p
 }
 
+// Process process a message
 func (p Example) Process(m message.Message) error {
 	// Create a request to the providerExample
 	req, err := http.NewRequest(http.MethodPost, p.config.ProviderExampleRequestURI, nil)

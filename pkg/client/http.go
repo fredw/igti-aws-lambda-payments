@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// List of errors
 var (
 	ErrMalformedBody = errors.New("malformed body")
 )
