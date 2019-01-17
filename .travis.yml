@@ -16,3 +16,11 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+deploy:
+  provider: lambda
+  function_name: "payments"
+  region: "us-west-2"
+  role: "arn:aws:iam::149764127702:role/service-role/payments"
+  runtime: "go1.x"
+  handler_name: "main"
