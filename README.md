@@ -1,6 +1,10 @@
 Payments process using AWS Lambda 
 ============================================================
 
+[![Build Status](https://travis-ci.org/fredw/igti-aws-lambda-payments.svg?branch=master)](https://travis-ci.org/fredw/igti-aws-lambda-payments)
+[![Go Report Card](https://goreportcard.com/badge/github.com/fredw/igti-aws-lambda-payments)](https://goreportcard.com/report/github.com/fredw/igti-aws-lambda-payments)
+[![codecov](https://codecov.io/gh/fredw/igti-aws-lambda-payments/branch/master/graph/badge.svg)](https://codecov.io/gh/fredw/igti-aws-lambda-payments)
+
 The digital payment made through the internet using credit cards or bank transactions has become essential for success in a business, providing business and consumer advantages by making payment easily and securely. 
 To provide this functionality, there are a few different market models, one of which is integration through a payment gateway, a transparent model for the consumer. 
 
