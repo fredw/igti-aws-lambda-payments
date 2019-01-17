@@ -16,7 +16,7 @@ func (ma *MockAdapter) GetMessages() (Messages, error) {
 	return args.Get(0).(Messages), args.Error(1)
 }
 
-// GetMessages mocks the message deletion
+// Delete mocks the message deletion
 func (ma *MockAdapter) Delete(id *string) error {
 	args := ma.Called(id)
 	return args.Error(0)

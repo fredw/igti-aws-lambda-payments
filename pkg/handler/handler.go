@@ -22,8 +22,10 @@ var (
 	MessageStatusCritical = "critical"
 )
 
+// Event represents the Lambda event
 type Event struct{}
 
+// Handler represents the handler
 type Handler struct {
 	log       *log.Logger
 	providers provider.ProcessorList
