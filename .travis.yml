@@ -16,9 +16,6 @@ before_script:
   - go install -mod vendor github.com/golangci/golangci-lint/cmd/golangci-lint
   - go vet ./...
 
-before_install:
-  - go get -t -v ./...
-
 script:
   - golangci-lint run
   - go test -race -coverprofile=coverage.txt -covermode=atomic
