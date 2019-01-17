@@ -1,0 +1,27 @@
+language: go
+
+go:
+  - "1.x"
+  - "1.11.x"
+  - master
+
+# Only clone the most recent commit
+git:
+  depth: 1
+
+notifications:
+  email: false
+
+before_script:
+  - go install -mod vendor github.com/golangci/golangci-lint/cmd/golangci-lint
+  - go vet ./...
+
+before_install:
+  - go get -t -v ./...
+
+script:
+  - golangci-lint run
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
