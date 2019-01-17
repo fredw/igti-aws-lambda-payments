@@ -18,30 +18,30 @@ type SQSManager interface {
 }
 
 type SQSAdapter struct {
-	Config *config.Config
-	SQS    SQSManager
+	config *config.Config
+	sqs    SQSManager
 }
 
 // NewSQSAdapter creates a new SQS adapter
 func NewSQSAdapter(c *config.Config, sqs SQSManager) *SQSAdapter {
 	a := &SQSAdapter{
-		Config: c,
-		SQS:    sqs,
+		config: c,
+		sqs:    sqs,
 	}
 	return a
 }
 
 // GetMessages returns messages from SQS
 func (a *SQSAdapter) GetMessages() (Messages, error) {
-	result, err := a.SQS.ReceiveMessage(&sqs.ReceiveMessageInput{
+	result, err := a.sqs.ReceiveMessage(&sqs.ReceiveMessageInput{
 		AttributeNames: []*string{
 			aws.String(sqs.MessageSystemAttributeNameSentTimestamp),
 		},
 		MessageAttributeNames: []*string{
 			aws.String(sqs.QueueAttributeNameAll),
 		},
-		QueueUrl:            &a.Config.SqsQueueURL,
-		MaxNumberOfMessages: &a.Config.SqsMaxNumberOfMessages,
+		QueueUrl:            &a.config.SqsQueueURL,
+		MaxNumberOfMessages: &a.config.SqsMaxNumberOfMessages,
 		WaitTimeSeconds:     aws.Int64(0),
 	})
 
@@ -64,8 +64,8 @@ func (a *SQSAdapter) GetMessages() (Messages, error) {
 
 // Delete message from SQS
 func (a *SQSAdapter) Delete(id *string) error {
-	_, err := a.SQS.DeleteMessage(&sqs.DeleteMessageInput{
-		QueueUrl:      &a.Config.SqsQueueURL,
+	_, err := a.sqs.DeleteMessage(&sqs.DeleteMessageInput{
+		QueueUrl:      &a.config.SqsQueueURL,
 		ReceiptHandle: id,
 	})
 
@@ -85,9 +85,9 @@ func (a *SQSAdapter) MoveToFailed(m Message) error {
 
 	// Send the message to the DLQ
 	id := string(uuid.NewV4().String())
-	_, err = a.SQS.SendMessage(&sqs.SendMessageInput{
+	_, err = a.sqs.SendMessage(&sqs.SendMessageInput{
 		MessageBody:            aws.String(string(body)),
-		QueueUrl:               aws.String(a.Config.SqsDLQQueueURL),
+		QueueUrl:               aws.String(a.config.SqsDLQQueueURL),
 		MessageGroupId:         &id,
 		MessageDeduplicationId: &id,
 	})

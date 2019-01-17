@@ -18,7 +18,7 @@ var (
 
 // Example represents an example providerExample
 type Example struct {
-	Config *config.Config
+	config *config.Config
 	Client client.HttpCaller
 }
 
@@ -26,11 +26,11 @@ type Example struct {
 func NewExampleProvider(config *config.Config) Example {
 	// Calculate the request timeout
 	timeout := time.Duration(time.Duration(60) * time.Second)
-	// Create a http client
+	// Create a http Client
 	c := &http.Client{Timeout: timeout}
 
 	p := Example{
-		Config: config,
+		config: config,
 		Client: client.NewHttpClient(c),
 	}
 
@@ -39,7 +39,7 @@ func NewExampleProvider(config *config.Config) Example {
 
 func (p Example) Process(m message.Message) error {
 	// Create a request to the providerExample
-	req, err := http.NewRequest(http.MethodPost, p.Config.ProviderExampleRequestURI, nil)
+	req, err := http.NewRequest(http.MethodPost, p.config.ProviderExampleRequestURI, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to create a request")
 	}
