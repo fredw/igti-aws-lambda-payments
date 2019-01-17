@@ -105,7 +105,7 @@ func (h *Handler) processErrorMessage(m message.Message, err error) error {
 	switch err.(type) {
 	case *provider.CriticalError:
 		// If it's a critical failure, move the message directly to the DLQ
-		errDLQ := h.adapter.MoveToDLQ(m)
+		errDLQ := h.adapter.MoveToFailed(m)
 		if errDLQ != nil {
 			return errors.Wrap(err, "problem to move the message to DLQ")
 		}

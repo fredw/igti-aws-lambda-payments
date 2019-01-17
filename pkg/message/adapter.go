@@ -4,5 +4,5 @@ package message
 type Adapter interface {
 	GetMessages() (Messages, error)
 	Delete(id *string) error
-	MoveToDLQ(m Message) error
+	MoveToFailed(m Message) error
 }

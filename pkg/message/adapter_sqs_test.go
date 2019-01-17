@@ -80,3 +80,98 @@ func TestSQSAdapter_GetMessages(t *testing.T) {
 		})
 	}
 }
+
+func TestSQSAdapter_Delete(t *testing.T) {
+
+	messageId := "123"
+
+	tests := []struct {
+		name        string
+		messageId   *string
+		deleteError error
+		wantError   bool
+	}{
+		{
+			name:      "message deleted successfully",
+			messageId: &messageId,
+		},
+		{
+			name:        "message deleted failed",
+			messageId:   &messageId,
+			deleteError: errors.New("test"),
+			wantError:   true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockSQS := new(message.MockSQS)
+			mockSQS.On("DeleteMessage", mock.AnythingOfType("*sqs.DeleteMessageInput")).
+				Return(nil, tc.deleteError)
+
+			sa := message.NewSQSAdapter(&config.Config{}, mockSQS)
+			err := sa.Delete(tc.messageId)
+
+			if tc.wantError {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestSQSAdapter_MoveToFailed(t *testing.T) {
+
+	messageId := "123"
+
+	tests := []struct {
+		name        string
+		message     message.Message
+		sendError   error
+		deleteError error
+		wantError   bool
+	}{
+		{
+			name: "message moved successfully",
+			message: message.Message{
+				Id: &messageId,
+			},
+		},
+		{
+			name: "message moved failed due the send error",
+			message: message.Message{
+				Id: &messageId,
+			},
+			sendError: errors.New("test"),
+			wantError: true,
+		},
+		{
+			name: "message moved failed due the delete error",
+			message: message.Message{
+				Id: &messageId,
+			},
+			deleteError: errors.New("test"),
+			wantError:   true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockSQS := new(message.MockSQS)
+			mockSQS.On("SendMessage", mock.AnythingOfType("*sqs.SendMessageInput")).
+				Return(nil, tc.sendError)
+			mockSQS.On("DeleteMessage", mock.AnythingOfType("*sqs.DeleteMessageInput")).
+				Return(nil, tc.deleteError)
+
+			sa := message.NewSQSAdapter(&config.Config{}, mockSQS)
+			err := sa.MoveToFailed(tc.message)
+
+			if tc.wantError {
+				assert.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
+}

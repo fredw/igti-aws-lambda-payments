@@ -1,19 +1,20 @@
-package provider
+package provider_test
 
 import (
 	"testing"
 
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
+	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
 )
 
-var providers = Providers{}
+var providers = provider.Providers{}
 
 func init() {
 	c, _ := config.Load()
-	providers = NewProviders(c)
+	providers = provider.NewProviders(c)
 }
 
 func TestProviders(t *testing.T) {
@@ -24,14 +25,14 @@ func TestGetByMessage(t *testing.T) {
 	tests := []struct {
 		name    string
 		message message.Message
-		want    Processor
+		want    provider.Processor
 	}{
 		{
 			name: "it should return the example providerExample",
 			message: message.Message{
 				Provider: "Example",
 			},
-			want: providers[ExampleProvider],
+			want: providers[provider.ExampleProvider],
 		},
 		{
 			name: "it should't return a providerExample",
@@ -44,8 +45,8 @@ func TestGetByMessage(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			provider := providers.GetByMessage(tc.message)
-			assert.Equal(t, tc.want, provider)
+			p := providers.GetByMessage(tc.message)
+			assert.Equal(t, tc.want, p)
 		})
 	}
 }

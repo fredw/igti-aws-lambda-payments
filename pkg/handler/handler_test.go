@@ -172,7 +172,7 @@ func TestNewHandler(t *testing.T) {
 			mockAdapter := new(message.MockAdapter)
 			mockAdapter.On("GetMessages").Return(tc.adapterGetMessageResponse, tc.adapterGetMessageError)
 			mockAdapter.On("Delete", mock.Anything).Return(tc.adapterDeleteError)
-			mockAdapter.On("MoveToDLQ", mock.Anything).Return(tc.adapterMoveDLQError)
+			mockAdapter.On("MoveToFailed", mock.Anything).Return(tc.adapterMoveDLQError)
 
 			h := handler.NewHandler(l, providersMock, mockAdapter)
 			resp, err := h.Handler(ctx, handler.Event{})

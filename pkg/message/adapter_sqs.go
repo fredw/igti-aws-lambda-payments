@@ -76,8 +76,8 @@ func (a *SQSAdapter) Delete(id *string) error {
 	return nil
 }
 
-// MoveToDLQ moves the message directly to the DLQ
-func (a *SQSAdapter) MoveToDLQ(m Message) error {
+// MoveToFailed moves the message directly to the list of failed messages (DLQ)
+func (a *SQSAdapter) MoveToFailed(m Message) error {
 	body, err := json.Marshal(m)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal message")

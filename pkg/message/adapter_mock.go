@@ -19,7 +19,7 @@ func (ma *MockAdapter) Delete(id *string) error {
 	return args.Error(0)
 }
 
-func (ma *MockAdapter) MoveToDLQ(m Message) error {
+func (ma *MockAdapter) MoveToFailed(m Message) error {
 	args := ma.Called(m)
 	return args.Error(0)
 }
@@ -35,10 +35,10 @@ func (ms *MockSQS) ReceiveMessage(rmi *sqs.ReceiveMessageInput) (*sqs.ReceiveMes
 
 func (ms *MockSQS) DeleteMessage(dmi *sqs.DeleteMessageInput) (*sqs.DeleteMessageOutput, error) {
 	args := ms.Called(dmi)
-	return args.Get(0).(*sqs.DeleteMessageOutput), args.Error(1)
+	return nil, args.Error(1)
 }
 
 func (ms *MockSQS) SendMessage(smi *sqs.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	args := ms.Called(smi)
-	return args.Get(0).(*sqs.SendMessageOutput), args.Error(1)
+	return nil, args.Error(1)
 }
