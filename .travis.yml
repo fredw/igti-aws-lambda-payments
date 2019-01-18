@@ -18,11 +18,13 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 
 deploy:
-  provider: lambda
-  function_name: "payments"
-  region: "us-west-2"
-  role: "arn:aws:iam::149764127702:role/service-role/payments"
-  runtime: "go1.x"
-  handler_name: "main"
-  timeout: 60
-  memory_size: 512
+  - provider: lambda
+    function_name: "payments"
+    region: "us-west-2"
+    role: "arn:aws:iam::149764127702:role/service-role/payments"
+    runtime: "go1.x"
+    handler_name: "main"
+    timeout: 60
+    memory_size: 512
+  - provider: script
+    script: bash aws lambda update-function-configuration --function-name=payments --handler=main
