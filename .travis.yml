@@ -26,5 +26,9 @@ deploy:
     handler_name: "main"
     timeout: 60
     memory_size: 512
+    on:
+      branch: master
   - provider: script
     script: bash aws lambda update-function-configuration --function-name=payments --handler=main
+    on:
+      branch: master
