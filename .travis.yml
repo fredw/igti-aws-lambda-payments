@@ -29,6 +29,6 @@ deploy:
     on:
       branch: master
   - provider: script
-    script: bash aws lambda update-function-configuration --function-name=payments --handler=main
+    script: bash ./assets/scripts/lambda_update_config.sh
     on:
       branch: master
