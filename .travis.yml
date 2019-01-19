@@ -17,18 +17,12 @@ script:
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 
+before_deploy:
+  - pip install --user awscli
+  - export PATH=$PATH:$HOME/.local/bin
+
 deploy:
-  - provider: lambda
-    function_name: "payments"
-    region: "us-west-2"
-    role: "arn:aws:iam::149764127702:role/service-role/payments"
-    runtime: "go1.x"
-    handler_name: "main"
-    timeout: 60
-    memory_size: 512
-    on:
-      branch: master
   - provider: script
-    script: bash ./assets/scripts/lambda_update_config.sh
+    script: make build && make update
     on:
       branch: master

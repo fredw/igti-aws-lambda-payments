@@ -7,5 +7,8 @@ export PATH=$PATH:$HOME/.local/bin
 # AWS Login
 eval $(aws ecr get-login)
 
+make build
+make
+
 # Update the handler name to the right name
 aws lambda update-function-configuration --function-name=payments --handler=main
