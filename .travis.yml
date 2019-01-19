@@ -22,7 +22,7 @@ before_deploy:
 
 deploy:
   - provider: script
-#    script: bash ./assets/scripts/deploy.sh
-    script: bash $TRAVIS_BUILD_DIR/make build && bash $TRAVIS_BUILD_DIR/make update
+    script: bash ./assets/scripts/deploy.sh
+    skip_cleanup: true
     on:
       branch: master
