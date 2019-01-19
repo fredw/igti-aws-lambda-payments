@@ -23,6 +23,7 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: make build && make update
+#    script: bash ./assets/scripts/deploy.sh
+    script: $TRAVIS_BUILD_DIR/make build && $TRAVIS_BUILD_DIR/make update
     on:
       branch: master
