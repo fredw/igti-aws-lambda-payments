@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	perrors "github.com/fredw/igti-aws-lambda-payments/pkg/errors"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/handler"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
@@ -105,7 +106,7 @@ func TestNewHandler(t *testing.T) {
 		{
 			name:                      "messages processed with critical error",
 			adapterGetMessageResponse: messages,
-			processError:              provider.NewCriticalError("test"),
+			processError:              perrors.NewCriticalError("test"),
 			wantResponse: handler.Response{
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
@@ -120,14 +121,14 @@ func TestNewHandler(t *testing.T) {
 		{
 			name:                      "messages processed with delete error",
 			adapterGetMessageResponse: messages,
-			adapterDeleteError:        errors.New("test"),
+			adapterDeleteError:        perrors.NewCriticalError("failed to delete messages from SQS"),
 			wantResponse: handler.Response{
 				Result: "Messages processed",
 				Messages: []handler.MessageResponse{
 					{
 						ID:     &messageID,
-						Status: handler.MessageStatusError,
-						Error:  "failed to delete messages from SQS: test",
+						Status: handler.MessageStatusCritical,
+						Error:  "failed to delete messages from SQS",
 					},
 				},
 			},
@@ -135,7 +136,7 @@ func TestNewHandler(t *testing.T) {
 		{
 			name:                      "messages processed with DLQ error",
 			adapterGetMessageResponse: messages,
-			processError:              provider.NewCriticalError("test"),
+			processError:              perrors.NewCriticalError("test"),
 			adapterMoveDLQError:       errors.New("test"),
 			wantResponse: handler.Response{
 				Result: "Messages processed",

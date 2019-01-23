@@ -6,6 +6,7 @@ import (
 
 	"github.com/fredw/igti-aws-lambda-payments/pkg/client"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
+	perrors "github.com/fredw/igti-aws-lambda-payments/pkg/errors"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
 	"github.com/pkg/errors"
 )
@@ -14,7 +15,7 @@ import (
 var (
 	ErrFailProcessPayment       = errors.New("fail to process the payment")
 	ErrFailedRequest            = errors.New("failed to do a request to the providerExample")
-	ErrCriticalProviderInternal = NewCriticalError("payment can't be processed due a providerExample internal error")
+	ErrCriticalProviderInternal = perrors.NewCriticalError("payment can't be processed due a providerExample internal error")
 )
 
 // Example represents an example providerExample

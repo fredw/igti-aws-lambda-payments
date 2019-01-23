@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	perrors "github.com/fredw/igti-aws-lambda-payments/pkg/errors"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/message"
 	"github.com/fredw/igti-aws-lambda-payments/pkg/provider"
 	"github.com/pkg/errors"
@@ -94,9 +95,9 @@ func (h *Handler) processMessage(m message.Message) error {
 		return h.processErrorMessage(m, err)
 	}
 
-	// Successful: delete the message from SQS
+	// After successful process, try to delete the message from SQS
 	if err := h.adapter.Delete(m.Id); err != nil {
-		return errors.Wrap(err, "failed to delete messages from SQS")
+		return h.processErrorMessage(m, err)
 	}
 
 	return nil
@@ -105,10 +106,10 @@ func (h *Handler) processMessage(m message.Message) error {
 // processErrorMessage process a message with an error
 func (h *Handler) processErrorMessage(m message.Message, err error) error {
 	switch err.(type) {
-	case *provider.CriticalError:
-		// If it's a critical failure, move the message directly to the DLQ
-		errDLQ := h.adapter.MoveToFailed(m)
-		if errDLQ != nil {
+	case *perrors.CriticalError:
+		// If it's a critical failure, move the message directly to the failed list
+		errM := h.adapter.MoveToFailed(m)
+		if errM != nil {
 			return errors.Wrap(err, "problem to move the message to DLQ")
 		}
 		return err
@@ -121,7 +122,7 @@ func (h *Handler) getMessageResponse(m message.Message, err error) MessageRespon
 	if err != nil {
 		mStatus := MessageStatusError
 		switch err.(type) {
-		case *provider.CriticalError:
+		case *perrors.CriticalError:
 			mStatus = MessageStatusCritical
 		}
 

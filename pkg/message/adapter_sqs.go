@@ -9,6 +9,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/fredw/igti-aws-lambda-payments/pkg/config"
+	perrors "github.com/fredw/igti-aws-lambda-payments/pkg/errors"
 )
 
 // SQSManager specifies a SQS manager interface
@@ -72,7 +73,7 @@ func (a *SQSAdapter) Delete(id *string) error {
 	})
 
 	if err != nil {
-		return errors.Wrap(err, "failed to delete messages from SQS")
+		return perrors.NewCriticalError("failed to delete messages from SQS")
 	}
 
 	return nil

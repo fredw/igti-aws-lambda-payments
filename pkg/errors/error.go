@@ -1,4 +1,4 @@
-package provider
+package errors
 
 // NewCriticalError returns an new critical error
 func NewCriticalError(s string) error {
