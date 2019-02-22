@@ -67,40 +67,47 @@ func (h *Handler) Handler(ctx context.Context, event Event) (Response, error) {
 		return Response{Result: "No messages received"}, nil
 	}
 
-	// Process all messages
-	var mResponses []MessageResponse
+	// Process all messages concurrently
+	cmr := make(chan MessageResponse)
 	for _, m := range messages {
-		err := h.processMessage(m)
-		mResponses = append(mResponses, h.getMessageResponse(m, err))
-
-		h.log.WithFields(log.Fields{"message": m}).Info("message processed successfully")
+		go h.processMessage(m, cmr)
+		h.log.WithField("message", m).Info("message processed successfully")
 	}
 
-	return Response{
-		Result:   "Messages processed",
-		Messages: mResponses,
-	}, nil
+	// Create a list of message responses
+	var mrs []MessageResponse
+	for range messages {
+		mrs = append(mrs, <-cmr)
+	}
+
+	h.log.WithField("messages", mrs).Info("messages processed")
+
+	return Response{Result: "Messages processed", Messages: mrs}, nil
 }
 
 // processMessage process a message calling the provider logic and handle the message through the SQS
-func (h *Handler) processMessage(m message.Message) error {
+func (h *Handler) processMessage(m message.Message, cmr chan MessageResponse) {
 	// Get the provider and process the message using the own provider logic
 	p := h.providers.GetByMessage(m)
 	if p == nil {
-		return fmt.Errorf("provider %s not available to process this message", m.Provider)
+		err := fmt.Errorf("provider %s not available to process this message", m.Provider)
+		cmr <- h.getMessageResponse(m, err)
+		return
 	}
 
 	// Try to process the message
 	if err := p.Process(m); err != nil {
-		return h.processErrorMessage(m, err)
+		cmr <- h.getMessageResponse(m, h.processErrorMessage(m, err))
+		return
 	}
 
 	// After successful process, try to delete the message from SQS
 	if err := h.adapter.Delete(m.Id); err != nil {
-		return h.processErrorMessage(m, err)
+		cmr <- h.getMessageResponse(m, h.processErrorMessage(m, err))
+		return
 	}
 
-	return nil
+	cmr <- h.getMessageResponse(m, nil)
 }
 
 // processErrorMessage process a message with an error
